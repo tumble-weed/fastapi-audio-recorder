@@ -1,40 +1,55 @@
-from fastapi import FastAPI, File, UploadFile
+import time
+from fastapi import FastAPI, UploadFile
+from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
+import uvicorn
+import os
 
-app = FastAPI(debug=True)
+app = FastAPI()
 
-#origins = ["http://localhost:10000"]
-origins = ["*"]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-#'''
-#app.mount("/", StaticFiles(directory=".", html=True), name="static")
-#@app.get("/api/data")
-#def read_data():
-#  return{"message": "It worked!"}
-#@app.post("/uploadfile")
-#async def create_upload_file(*args,**kwargs):
-#@app.post("/uploadfile")
-#async def create_upload_file(file: UploadFile = File(...)):
-@app.get('/testing')
-async def testing():
-    return {'message':'hello you have reached "testing"'}
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+timestr = time.strftime("%Y%m%d-%H%M%S")
 
-@app.post("/uploadfile")
-def create_upload_file(file: UploadFile = File(..., media_type="audio/wav")):
-    print("Hello")
-    with open(file.filename, "wb") as audio_file:
-        audio_file.write(file.file.read())
-    return {"filename": file.filename}
+@app.get("/")
+def read_root():
+    return {"Hello": "FastAPI"}
 
-#@app.route("/index.html")
-#def index():
-#    return Template('index.html')
 
+@app.post("/file/upload")
+def upload_file(file: UploadFile):
+    if not file.content_type.startswith("audio/"):
+        raise HTTPException(400, detail="Invalid audio file type")
+    else:
+        # Handle audio file data
+        # Here you can save the audio file, process it, etc.
+        file_data = file.file.read()
+        # Example: save the audio file
+        new_filename = "{}_{}.wav".format(os.path.splitext(file.filename)[0], timestr)
+        save_file_path = os.path.join(UPLOAD_DIR, new_filename)
+        with open(save_file_path, "wb") as f:
+            f.write(file_data)
+    return {"filename": new_filename}
+
+
+@app.post("/file/uploadndownload")
+def upload_n_downloadfile(file: UploadFile):
+    if not file.content_type.startswith("audio/"):
+        raise HTTPException(400, detail="Invalid audio file type")
+    else:
+        file_data = file.file.read()
+        new_filename = "{}_{}.wav".format(os.path.splitext(file.filename)[0], timestr)
+        # Save the audio file
+        save_file_path = os.path.join(UPLOAD_DIR, new_filename)
+        with open(save_file_path, "wb") as f:
+            f.write(file_data)
+
+        # Return the saved audio file as a download
+        return FileResponse(
+            path=save_file_path,
+            media_type="audio/wav",
+            filename=new_filename,
+        )
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="127.0.0.1", port=8000)
