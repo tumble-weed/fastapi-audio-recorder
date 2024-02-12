@@ -1,0 +1,29 @@
+Overall idea: to record audio
+    buttons: start_record, stop_record, play_recrding?
+    scripts:
+        # js
+        ? mediarecorder:
+            created object
+            ? did we use this for the events?
+         start_record: 
+            click events:
+                disabled start_record
+                made an empty audiochunk #  something like alist, does audio come in in chunks?
+         stop_record : 
+            click events:
+                ?
+                do something with the audio chunk:
+                    debugging with printout of where blob is stored
+                    set the blob address to the input of the player
+                three dot pattern for downloading the audio
+                        
+         blob ... invoked mediarecorder record:
+            - ask for mic permission,
+                ".then" in the code
+                 else print error
+            - "on ready" event: when the audio is ready  
+                    some conversion to "wav" --> blob
+            ?? the code with the mediaplayer, other functionalities
+         
+
+
