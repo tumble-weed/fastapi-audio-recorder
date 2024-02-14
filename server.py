@@ -2,11 +2,12 @@ import time
 from fastapi import FastAPI, UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
-
 app = FastAPI()
 
+app.mount("/", StaticFiles(directory="./static/", html=True), name="static")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -52,4 +53,4 @@ def upload_n_downloadfile(file: UploadFile):
         )
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=8002)

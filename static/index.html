@@ -29,8 +29,11 @@
                     const formdata = new FormData();
                     formdata.append("audio_file",audioBlob,"audio.wav") 
                     //========================================================
-                    fetch("http:localhost:8004/uploadfile", {
+                    fetch("http://localhost:8002/file/uploadfile", {
                       method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
                       //body: audioBlob,
                       body: formdata,
                     })
