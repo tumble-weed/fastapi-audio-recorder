@@ -6,13 +6,14 @@
     <title>Audio Recorder</title>
 </head>
 <body>
+    <h1>Audio Recorder</h1>
     <button id="startRecord">Start Recording</button>
     <button id="stopRecord" disabled>Stop Recording</button>
     <audio id="audioPlayer" controls></audio>
 
     <script>
-        let audioChunks = [];
         let mediaRecorder;
+        let audioChunks = [];
 
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
@@ -25,34 +26,12 @@
                 };
 
                 mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    const formdata = new FormData();
-                    formdata.append("audio_file",audioBlob,"audio.wav") 
-                    //========================================================
-                    fetch("http://localhost:8002/file/uploadfile", {
-                      method: 'POST',
-                        headers: {
-                            'Accept': 'application/json',
-                        },
-                      //body: audioBlob,
-                      body: formdata,
-                    })
-                      .then(response => response.json())
-                      .then(data => console.log('Server response:', data))
-                      .catch(error => console.error('Error sending audio to the server:', error));
-
-                    //========================================================
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    console.log(audioUrl);
-                    document.getElementById('audioPlayer').src = audioUrl;
-
-                    // Now, you can send the audioBlob to the backend using fetch or another method
+                    convertToWavAndUpload(audioChunks);
                 };
             })
             .catch(error => console.error("Error accessing microphone:", error));
 
         document.getElementById('startRecord').addEventListener('click', () => {
-            audioChunks = [];
             mediaRecorder.start();
             document.getElementById('startRecord').disabled = true;
             document.getElementById('stopRecord').disabled = false;
@@ -63,7 +42,25 @@
             document.getElementById('startRecord').disabled = false;
             document.getElementById('stopRecord').disabled = true;
         });
+
+        async function convertToWavAndUpload(chunks) {
+            const audioBlob = new Blob(chunks, { type: 'audio/wav' });
+            const formData = new FormData();
+            formData.append('file', audioBlob, 'audio.wav');
+
+            try {
+                const response = await fetch('http://127.0.0.1:8000/file/upload/', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                console.log('Server response:', data);
+                const audioUrl = URL.createObjectURL(audioBlob);
+                document.getElementById('audioPlayer').src = audioUrl;
+            } catch (error) {
+                console.error('Error sending audio to the server:', error);
+            }
+        }
     </script>
 </body>
 </html>
-
