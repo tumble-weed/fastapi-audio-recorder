@@ -5,9 +5,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 import uvicorn
 import os
-app = FastAPI()
 
-app.mount("/", StaticFiles(directory="./static/", html=True), name="static")
+app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -18,14 +18,12 @@ def read_root():
 
 
 @app.post("/file/upload")
-def upload_file(file: UploadFile):
+async def upload_file(file: UploadFile):
     if not file.content_type.startswith("audio/"):
         raise HTTPException(400, detail="Invalid audio file type")
     else:
-        # Handle audio file data
-        # Here you can save the audio file, process it, etc.
         file_data = file.file.read()
-        # Example: save the audio file
+        content = await file.read()
         new_filename = "{}_{}.wav".format(os.path.splitext(file.filename)[0], timestr)
         save_file_path = os.path.join(UPLOAD_DIR, new_filename)
         with open(save_file_path, "wb") as f:
@@ -53,4 +51,4 @@ def upload_n_downloadfile(file: UploadFile):
         )
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8002)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
